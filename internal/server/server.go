@@ -49,7 +49,13 @@ func (s *Server) Stop() {
 }
 
 func sayHello(w http.ResponseWriter, r *http.Request) {
-	json.NewEncoder(w).Encode(map[string]string{
+
+	data := map[string]any {
 		"message": "Hello World!",
-	})
+		"time": time.Now(),
+	}
+
+	encoder := json.NewEncoder(w)
+	encoder.SetIndent("", " ")
+	encoder.Encode(data)
 }
