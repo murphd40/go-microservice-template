@@ -3,25 +3,30 @@ package server
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"net/http"
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/murphd40/go-microservice-template/internal/logging"
+	"github.com/murphd40/go-microservice-template/internal/server/handler"
 )
 
 type Server struct {
 	httpServer http.Server
 }
 
-func NewServer() *Server {
+func NewServer(chatMessageHandler handler.ChatMessageHandler) *Server {
 	r := mux.NewRouter()
 	r.HandleFunc("/hello", sayHello).Methods("GET")
+	v1 := r.PathPrefix("/api/v1").Subrouter()
+
+	v1.HandleFunc("/chatmessage", chatMessageHandler.CreateChatMessage).Methods("POST")
+	v1.HandleFunc("/chatmessage/{chatMessageId}", chatMessageHandler.GetChatMessageById).Methods("GET")
 
 	return &Server{
-		http.Server{
+		httpServer: http.Server{
 			Handler: r,
-			Addr: "127.0.0.1:9080",
+			Addr: ":9080",
 			ReadTimeout: 15 * time.Second,
 			WriteTimeout: 15 * time.Second,
 		},
@@ -30,18 +35,20 @@ func NewServer() *Server {
 
 func (s *Server) Start() {
 
-	log.Println("Starting server...")
+	logging.Info("Starting server...")
 
 	go func() {
 		if err := s.httpServer.ListenAndServe(); err != nil {
-			log.Println(err)
+			logging.Error(err)
 		}
 	}()
+
+	logging.Info("Server is listening on ", s.httpServer.Addr)
 }
 
 func (s *Server) Stop() {
 
-	log.Println("Stopping server...")
+	logging.Info("Stopping server...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 15 * time.Second)
 	defer cancel()

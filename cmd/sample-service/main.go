@@ -1,16 +1,25 @@
 package main
 
 import (
-	"log"
 	"os"
 	"os/signal"
 
 	"github.com/murphd40/go-microservice-template/internal/server"
+	"github.com/murphd40/go-microservice-template/internal/server/handler"
+	"github.com/murphd40/go-microservice-template/internal/service"
+	"github.com/murphd40/go-microservice-template/internal/dao/repository"
+	"github.com/murphd40/go-microservice-template/internal/logging"
 )
 
 func main() {
 
-	s := server.NewServer()
+	logging.Configure("INFO")
+
+	chatMessageRepository := repository.NewChatMessageRepository()
+	chatMessageService := service.NewChatMessageService(chatMessageRepository)
+	chatMessageHandler := handler.NewChatMessageHandler(chatMessageService)
+
+	s := server.NewServer(*chatMessageHandler)
 
 	s.Start()
 
@@ -20,9 +29,9 @@ func main() {
 
 	<-c
 
-	s.Stop()
+	logging.Info("Shutting down...")
 
-	log.Println("Shutting down...")
+	s.Stop()
 
 	os.Exit(0)
 
