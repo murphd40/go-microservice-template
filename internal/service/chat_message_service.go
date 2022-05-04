@@ -1,8 +1,8 @@
 package service
 
 import (
-	"github.com/murphd40/go-microservice-template/internal/dao/repository"
 	"github.com/murphd40/go-microservice-template/internal/dao/model"
+	"github.com/murphd40/go-microservice-template/internal/dao/repository"
 )
 
 type ChatMessageService interface {
@@ -28,4 +28,3 @@ func (c *chatMessageServiceImpl) CreateChatMessage(chatMessage model.ChatMessage
 func (c *chatMessageServiceImpl) GetChatMessageById(chatMessageId string) (model.ChatMessage, bool) {
 	return c.chatMessageRepository.FindById(chatMessageId)
 }
-

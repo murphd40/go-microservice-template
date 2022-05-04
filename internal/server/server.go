@@ -3,10 +3,12 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/murphd40/go-microservice-template/internal/config"
 	"github.com/murphd40/go-microservice-template/internal/logging"
 	"github.com/murphd40/go-microservice-template/internal/server/handler"
 )
@@ -15,7 +17,7 @@ type Server struct {
 	httpServer http.Server
 }
 
-func NewServer(chatMessageHandler handler.ChatMessageHandler) *Server {
+func NewServer(properties *config.ServerProperties, chatMessageHandler handler.ChatMessageHandler) *Server {
 	r := mux.NewRouter()
 	r.HandleFunc("/hello", sayHello).Methods("GET")
 	v1 := r.PathPrefix("/api/v1").Subrouter()
@@ -25,10 +27,10 @@ func NewServer(chatMessageHandler handler.ChatMessageHandler) *Server {
 
 	return &Server{
 		httpServer: http.Server{
-			Handler: r,
-			Addr: ":9080",
-			ReadTimeout: 15 * time.Second,
-			WriteTimeout: 15 * time.Second,
+			Handler:      r,
+			Addr:         fmt.Sprint(":", properties.Port),
+			ReadTimeout:  properties.ReadTimeout,
+			WriteTimeout: properties.WriteTimeout,
 		},
 	}
 }
@@ -50,16 +52,16 @@ func (s *Server) Stop() {
 
 	logging.Info("Stopping server...")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 15 * time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 	s.httpServer.Shutdown(ctx)
 }
 
 func sayHello(w http.ResponseWriter, r *http.Request) {
 
-	data := map[string]any {
+	data := map[string]any{
 		"message": "Hello World!",
-		"time": time.Now(),
+		"time":    time.Now(),
 	}
 
 	encoder := json.NewEncoder(w)

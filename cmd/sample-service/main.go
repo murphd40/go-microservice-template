@@ -3,23 +3,34 @@ package main
 import (
 	"os"
 	"os/signal"
+	"strings"
 
+	"github.com/murphd40/go-microservice-template/internal/config"
+	"github.com/murphd40/go-microservice-template/internal/dao/repository"
+	"github.com/murphd40/go-microservice-template/internal/logging"
 	"github.com/murphd40/go-microservice-template/internal/server"
 	"github.com/murphd40/go-microservice-template/internal/server/handler"
 	"github.com/murphd40/go-microservice-template/internal/service"
-	"github.com/murphd40/go-microservice-template/internal/dao/repository"
-	"github.com/murphd40/go-microservice-template/internal/logging"
 )
 
 func main() {
 
 	logging.Configure("INFO")
 
+	envMap := make(map[string]string)
+	for _, item := range os.Environ() {
+		parts := strings.Split(item, "=")
+		envMap[parts[0]] = parts[1]
+	}
+
+	serverProperties := config.NewServerProperties()
+	config.PopulateConfig(envMap, &serverProperties)
+
 	chatMessageRepository := repository.NewChatMessageRepository()
 	chatMessageService := service.NewChatMessageService(chatMessageRepository)
 	chatMessageHandler := handler.NewChatMessageHandler(chatMessageService)
 
-	s := server.NewServer(*chatMessageHandler)
+	s := server.NewServer(&serverProperties, *chatMessageHandler)
 
 	s.Start()
 

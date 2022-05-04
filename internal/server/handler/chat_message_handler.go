@@ -34,7 +34,7 @@ func (h *ChatMessageHandler) CreateChatMessage(w http.ResponseWriter, r *http.Re
 	json.Unmarshal(bs, &data)
 
 	chatMessage := model.ChatMessage{
-		Content: data.Content,
+		Content:   data.Content,
 		CreatedBy: "admin",
 	}
 
